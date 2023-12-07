@@ -8,6 +8,8 @@ An SCP:SL Exiled Plugin, Porting the PropHunt Gamemode From Garry's Mod as an Au
 Made for `v13.3.1` of SCP:SL and `v8.4.3` of Exiled and onward by creepycats.
 
 ## Showcase
+[Click To Watch on Youtube](http://www.youtube.com/watch?v=1za77upqP_A)
+
 [![Plugin Showcase](http://img.youtube.com/vi/1za77upqP_A/0.jpg)](http://www.youtube.com/watch?v=1za77upqP_A "I Brought PROPHUNT to SCP: SECRET LABORATORY | Multiplayer Highlights")
 
 ## Features
