@@ -21,7 +21,7 @@ Made for `v13.3.1` of SCP:SL and `v8.4.3` of Exiled and onward by creepycats.
     - Owners can add Custom Taunts if they Choose
     - Health and Size change depending on the Prop possessed
     - Non-player Prop Amounts scale with the number of players (More fake props when more players online)
-    - 
+    - Use Left-Alt/Noclip Key to Lock and Unlock your Prop's Rotation
 - Hunters
     - Start with a FSP, Com-18, Grenade, Armor, and Infinite Ammo
     - After 30 seconds, Hunters are Released
