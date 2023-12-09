@@ -24,6 +24,45 @@ namespace SCProphunt
     public class Game
     {
         /// <summary>
+        /// Parses variables from Translations
+        /// </summary>
+        /// <param name="inputTranslation"></param>
+        /// <returns></returns>
+        public static string ProcessTranslation(string inputTranslation, Player player = null, ZoneType zone = ZoneType.Unspecified) {
+            long CurrentTime = (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds;
+            string output = inputTranslation.Replace("{props}", SCProphunt.Instance.PropHuntRound.PropHuntTeam.Values.Count(n => n == "prop").ToString())
+                .Replace("{hunters}", SCProphunt.Instance.PropHuntRound.PropHuntTeam.Values.Count(n => n == "hunter").ToString())
+                .Replace("{releaseTime}", BeautifyTime(CurrentTime, SCProphunt.Instance.PropHuntRound.TimeStarted + (30 * 1000)))
+                .Replace("{timeLeft}", BeautifyTime(CurrentTime, SCProphunt.Instance.PropHuntRound.TimeFinished))
+                .Replace("{votingTime}", BeautifyTime(CurrentTime, SCProphunt.Instance.PropHuntRound.VotingTimeFinish))
+                .Replace("{nextTaunt}", BeautifyTime(CurrentTime, SCProphunt.Instance.PropHuntRound.LastTaunt + (long)(SCProphunt.Instance.Config.TauntCooldown * 1000)))
+                .Replace("{lightVotes}", SCProphunt.Instance.PropHuntRound.MapChoice.Values.Count(e => e == ZoneType.LightContainment).ToString())
+                .Replace("{heavyVotes}", SCProphunt.Instance.PropHuntRound.MapChoice.Values.Count(e => e == ZoneType.HeavyContainment).ToString())
+                .Replace("{entranceVotes}", SCProphunt.Instance.PropHuntRound.MapChoice.Values.Count(e => e == ZoneType.Entrance).ToString())
+                .Replace("{startingIn}", BeautifyTime(CurrentTime, SCProphunt.Instance.PropHuntRound.TimeStarted))
+                .Replace("{chosenMap}", (SCProphunt.Instance.PropHuntRound.ChosenMap == ZoneType.LightContainment ? $"<color=#ffef63>[{SCProphunt.Instance.Config.PluginTranslations.voting_light_label}]</color>" : (SCProphunt.Instance.PropHuntRound.ChosenMap == ZoneType.HeavyContainment ? $"<color=#4a4a4a>[{SCProphunt.Instance.Config.PluginTranslations.voting_heavy_label}]</color>" : $"<color=#ffac63>[{SCProphunt.Instance.Config.PluginTranslations.voting_entrance_label}]</color>")));
+
+            if (player != null) {
+                ZoneType playerZone = ZoneType.Unspecified;
+                if (SCProphunt.Instance.PropHuntRound.MapChoice.ContainsKey(player.UserId)) playerZone = SCProphunt.Instance.PropHuntRound.MapChoice[player.UserId];
+
+                output = output.Replace("{voteZone}", (playerZone == ZoneType.LightContainment ? $"<color=#ffef63>[{SCProphunt.Instance.Config.PluginTranslations.voting_light_label}]</color>" : (playerZone == ZoneType.HeavyContainment ? $"<color=#4a4a4a>[{SCProphunt.Instance.Config.PluginTranslations.voting_heavy_label}]</color>" : (playerZone == ZoneType.Entrance ? $"<color=#ffac63>[{SCProphunt.Instance.Config.PluginTranslations.voting_entrance_label}]</color>" : $"<color=#ff2e2e>[{SCProphunt.Instance.Config.PluginTranslations.voting_invalid_label}]</color>"))));
+            }
+            if (zone != ZoneType.Unspecified) {
+                output = output.Replace("{voteCount}", SCProphunt.Instance.PropHuntRound.MapChoice.Values.Count(e => e == zone).ToString());
+            }
+
+            return output;
+        }
+
+        public static string ProcessTranslationKillfeed(string inputTranslation, Player victim, Player attacker = null)
+        {
+            string playerColor = SCProphunt.Instance.PropHuntRound.PropHuntTeam[victim.UserId] == "hunter" ? "#f7c331" : "#31bcf7";
+            string attackerColor = attacker != null ? (SCProphunt.Instance.PropHuntRound.PropHuntTeam[attacker.UserId] == "hunter" ? "#f7c331" : "#31bcf7") : "";
+            return ProcessTranslation(inputTranslation).Replace("{victim}", victim != null ? $"<color={playerColor}>{victim.Nickname}</color>" : "").Replace("{attacker}", attacker != null ? $"<color={attackerColor}>{attacker.Nickname}</color>" : "");
+        }
+
+        /// <summary>
         /// Handles most of the Game Logic behind Prophunt
         /// </summary>
         /// <returns></returns>
@@ -39,15 +78,12 @@ namespace SCProphunt
                     {
                         if (CurrentTime < SCProphunt.Instance.PropHuntRound.TimeStarted)
                         {
-                            string bcMessage = "- <b>PropHunt</b> -";
+                            string bcMessage = $"- <b>{SCProphunt.Instance.Config.PluginTranslations.prophunt}</b> -";
                             // Voting Here
                             if (CurrentTime < SCProphunt.Instance.PropHuntRound.VotingTimeFinish)
                             {
                                 // Broadcast Current Standings
-                                int lightVotes = SCProphunt.Instance.PropHuntRound.MapChoice.Values.Count(e => e == ZoneType.LightContainment);
-                                int heavyVotes = SCProphunt.Instance.PropHuntRound.MapChoice.Values.Count(e => e == ZoneType.HeavyContainment);
-                                int entranceVotes = SCProphunt.Instance.PropHuntRound.MapChoice.Values.Count(e => e == ZoneType.Entrance);
-                                bcMessage += $"\n<size=24><color=#ffef63>[Light Containment - {lightVotes} Votes]</color> | <color=#4a4a4a>[Heavy Containment - {heavyVotes} Votes]</color> | <color=#ffac63>[Entrance Zone - {entranceVotes} Votes]</color></size>\n<size=30>{BeautifyTime(CurrentTime, SCProphunt.Instance.PropHuntRound.VotingTimeFinish)} Left to Vote on a Map!</size>";
+                                bcMessage += $"\n<size=24><color=#ffef63>[{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_light_label)} - {ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_vote_count, zone: ZoneType.LightContainment)}]</color> | <color=#4a4a4a>[{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_heavy_label)} - {ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_vote_count, zone: ZoneType.HeavyContainment)}]</color> | <color=#ffac63>[{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_entrance_label)} - {ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_vote_count, zone: ZoneType.Entrance)}]</color></size>\n<size=30>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_broadcast_time_left)}</size>";
                             } else
                             {
                                 // Broadcast Result
@@ -126,8 +162,8 @@ namespace SCProphunt
                                     SCProphunt.Instance.PropHuntRound.VoteWasTied = isTie;
                                 }
                                 
-                                bcMessage += $"\n<size=30>Chosen Map: {(SCProphunt.Instance.PropHuntRound.ChosenMap == ZoneType.LightContainment ? "<color=#ffef63>[Light Containment]</color>" : (SCProphunt.Instance.PropHuntRound.ChosenMap == ZoneType.HeavyContainment ? "<color=#4a4a4a>[Heavy Containment]</color>" : "<color=#ffac63>[Entrance Zone]</color>"))} {(SCProphunt.Instance.PropHuntRound.VoteWasTied ? " (Tie Broken)" : "")}</size>";
-                                bcMessage += $"\n<size=30>Starting in: {BeautifyTime(CurrentTime, SCProphunt.Instance.PropHuntRound.TimeStarted)}</size>";
+                                bcMessage += $"\n<size=30>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_broadcast_chosen_map)}</size>";
+                                bcMessage += $"\n<size=30>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_broadcast_starting_in)}</size>";
                             }
                             Exiled.API.Features.Broadcast _bc = new Exiled.API.Features.Broadcast(bcMessage, 3);
                             Map.ClearBroadcasts();
@@ -259,11 +295,11 @@ namespace SCProphunt
                             UniqueItemGeneration();
 
                             // TEST SOUND
-                            SoundHandler.PlayAudio("music.ogg", 5, true, "PropHunt", Vector3.zero);
+                            SoundHandler.PlayAudio("music.ogg", 5, true, $"{SCProphunt.Instance.Config.PluginTranslations.prophunt}", Vector3.zero);
                         }
                     } 
                     if (!SCProphunt.Instance.PropHuntRound.StillInLobby) {
-                        string bcContent = $"<u><size=30><color=#31bcf7>{SCProphunt.Instance.PropHuntRound.PropHuntTeam.Values.Count(n => n == "prop")} Props</color></size> - <b>PropHunt</b> -  <size=30><color=#f7c331>{SCProphunt.Instance.PropHuntRound.PropHuntTeam.Values.Count(n => n == "hunter")} Hunters</color></size></u> ";
+                        string bcContent = $"<u><size=30><color=#31bcf7>{ProcessTranslation("{props} " +SCProphunt.Instance.Config.PluginTranslations.props)}</color></size> - <b>{SCProphunt.Instance.Config.PluginTranslations.prophunt}</b> -  <size=30><color=#f7c331>{ProcessTranslation("{hunters} " + SCProphunt.Instance.Config.PluginTranslations.hunters)}</color></size></u> ";
 
                         // Round End / Winners
                         if (SCProphunt.Instance.PropHuntRound.TimeFinished < CurrentTime || ((SCProphunt.Instance.PropHuntRound.PropHuntTeam.Values.Count(n => n == "prop") == 0 || SCProphunt.Instance.PropHuntRound.PropHuntTeam.Values.Count(n => n == "hunter") == 0) && !SCProphunt.Instance.Config.Debug))
@@ -284,30 +320,30 @@ namespace SCProphunt
                             }
                             if (SCProphunt.Instance.PropHuntRound.PropHuntTeam.Values.Count(n => n == "prop") == 0)
                             {
-                                bcContent += $"\n<size=30><color=#f7c331>Hunters Win!</color></size>";
+                                bcContent += $"\n<size=30><color=#f7c331>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.broadcast_hunter_win)}</color></size>";
                             }
                             else
                             {
-                                bcContent += $"\n<size=30><color=#31bcf7>Props Win!</color></size>";
+                                bcContent += $"\n<size=30><color=#31bcf7>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.broadcast_prop_win)}</color></size>";
                             }
                             if (!SCProphunt.Instance.PropHuntRound.RoundEnded)
                             {
                                 SCProphunt.Instance.PropHuntRound.RoundEnded = true;
-                                SoundHandler.PlayAudio($"win.ogg", 15, false, "Round Ended", Vector3.zero, 5f);
+                                SoundHandler.PlayAudio($"win.ogg", 15, false, ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.round_end), Vector3.zero, 5f);
                             }
                         }
                         else
                         {
                             if (CurrentTime - SCProphunt.Instance.PropHuntRound.TimeStarted < (30 * 1000))
                             {
-                                bcContent += $"\n <size=30>{BeautifyTime(CurrentTime, SCProphunt.Instance.PropHuntRound.TimeStarted + (30 * 1000))} until Hunters are Released!</size>";
+                                bcContent += $"\n <size=30>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.broadcast_until_hunter_release)}</size>";
                             }
                             else
                             {
                                 // RELEASE THE HUNTERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRS
                                 if (!SCProphunt.Instance.PropHuntRound.HuntersReleased)
                                 {
-                                    SCProphunt.Instance.PropHuntRound.KillFeed.Add($"<size=25>[ ℹ ] Hunters have been Released!</size>", CurrentTime);
+                                    SCProphunt.Instance.PropHuntRound.KillFeed.Add($"<size=25>{SCProphunt.Instance.Config.PluginTranslations.killfeed_hunters_released}</size>", CurrentTime);
                                     SCProphunt.Instance.PropHuntRound.HuntersReleased = true;
                                     foreach (KeyValuePair<string, string> playerEntry in SCProphunt.Instance.PropHuntRound.PropHuntTeam)
                                     {
@@ -317,7 +353,7 @@ namespace SCProphunt
                                         }
                                     }
                                 }
-                                bcContent += $"\n <size=30>{BeautifyTime(CurrentTime, SCProphunt.Instance.PropHuntRound.TimeFinished)} Left</size>";
+                                bcContent += $"\n <size=30>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.broadcast_time_left)}</size>";
                             }
                         }
 
@@ -338,7 +374,7 @@ namespace SCProphunt
                                     }
                                 }
                             }
-                            bcContent += $"\n <size=28>Next Prop Taunts in {BeautifyTime(CurrentTime, SCProphunt.Instance.PropHuntRound.LastTaunt + (long)(SCProphunt.Instance.Config.TauntCooldown * 1000))}</size>";
+                            bcContent += $"\n <size=28>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.broadcast_next_taunt)}</size>";
                         }
 
                         // Infinite Ammo for Hunters + Replace grenade with coin
@@ -395,18 +431,12 @@ namespace SCProphunt
                             if (player.IsNPC) continue;
                             string hintContent = "";
 
-                            ZoneType playerZone = ZoneType.Unspecified;
-                            if (SCProphunt.Instance.PropHuntRound.MapChoice.Keys.Contains(player.UserId)) playerZone = SCProphunt.Instance.PropHuntRound.MapChoice[player.UserId]; 
-
-                            hintContent += $"\n<size=180>\n</size>\n<size=30>Press [Ctrl] / Switch to a Keycard to Vote!</size>";
-                            hintContent += $"\n<size=27>You are Currently Voting For: {(playerZone == ZoneType.LightContainment ? "<color=#ffef63>[Light Containment]</color>" : (playerZone == ZoneType.HeavyContainment ? "<color=#4a4a4a>[Heavy Containment]</color>" : (playerZone == ZoneType.Entrance ? "<color=#ffac63>[Entrance Zone]</color>" : "<color=#ff2e2e>[None]</color>")))}</size>";
-                            int lightVotes = SCProphunt.Instance.PropHuntRound.MapChoice.Values.Count(e => e == ZoneType.LightContainment);
-                            int heavyVotes = SCProphunt.Instance.PropHuntRound.MapChoice.Values.Count(e => e == ZoneType.HeavyContainment);
-                            int entranceVotes = SCProphunt.Instance.PropHuntRound.MapChoice.Values.Count(e => e == ZoneType.Entrance);
-                            hintContent += $"\n<size=24><color=#ffef63>[Light Containment - {lightVotes} Votes]</color> | <color=#4a4a4a>[Heavy Containment - {heavyVotes} Votes]</color> | <color=#ffac63>[Entrance Zone - {entranceVotes} Votes]</color></size>";
-                            hintContent += $"\n<size=24><color=#ffef63>[Scientist Keycard]</color> -> <color=#ffef63>[Light Containment]</color></size>";
-                            hintContent += $"\n<size=24><color=#4a4a4a>[Guard Keycard]</color> -> <color=#4a4a4a>[Heavy Containment]</color></size>";
-                            hintContent += $"\n<size=24><color=#ff8f2e>[Researcher Keycard]</color> -> <color=#ffac63>[Entrance Zone]</color></size>";
+                            hintContent += $"\n<size=180>\n</size>\n<size=30>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_instruction)}</size>";
+                            hintContent += $"\n<size=27>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_current_selection, player)}</size>";
+                            hintContent += $"\n<size=24><color=#ffef63>[{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_light_label)} - {ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_vote_count, zone: ZoneType.LightContainment)}]</color> | <color=#4a4a4a>[{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_heavy_label)} - {ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_vote_count, zone: ZoneType.HeavyContainment)}]</color> | <color=#ffac63>[{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_entrance_label)} - {ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_vote_count, zone: ZoneType.Entrance)}]</color></size>";
+                            hintContent += $"\n<size=24><color=#ffef63>[{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_light_keycard)}]</color> -> <color=#ffef63>[{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_light_label)}]</color></size>";
+                            hintContent += $"\n<size=24><color=#4a4a4a>[{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_heavy_keycard)}]</color> -> <color=#4a4a4a>[{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_heavy_label)}]</color></size>";
+                            hintContent += $"\n<size=24><color=#ff8f2e>[{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_entrance_keycard)}]</color> -> <color=#ffac63>[{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.voting_entrance_label)}]</color></size>";
 
                             player.ShowHint(hintContent, 1f);
                         }
@@ -456,21 +486,21 @@ namespace SCProphunt
                                     // Denied Prop Message
                                     if (SCProphunt.Instance.PropHuntRound.DeniedPropPlayers.ContainsKey(player.UserId))
                                     {
-                                        hintContent += "<size=40><color=#f54842>This prop is prohibited!</color></size>\n";
+                                        hintContent += $"<size=40><color=#f54842>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.prop_ui_prohibited)}</color></size>\n";
                                     }
                                     else
                                     {
                                         hintContent += "<size=40> </size>\n";
                                     }
-                                    hintContent += "<size=30>Press L-ALT (Or Noclip Key) to Lock/Unlock Rotation</size>";
+                                    hintContent += $"<size=30>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.prop_ui_rotation_control_hint)}</size>";
                                     // Show Prop Hint for Rotation
                                     if (propItem.rotationLock)
                                     {
-                                        hintContent += $"\n<size=20><color=#f54842>Rotation Locked!</color></size>";
+                                        hintContent += $"\n<size=20><color=#f54842>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.prop_ui_rotation_locked)}</color></size>";
                                     }
                                     else
                                     {
-                                        hintContent += $"\n<size=20><color=#63f542>Rotation Unlocked!</color></size>";
+                                        hintContent += $"\n<size=20><color=#63f542>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.prop_ui_rotation_unlocked)}</color></size>";
                                     }
 
                                     // Take care of Taunt Timing
@@ -485,11 +515,11 @@ namespace SCProphunt
                                     // TAUNT MESSAGE
                                     if (SCProphunt.Instance.PropHuntRound.TauntedPropPlayers.ContainsKey(player.UserId))
                                     {
-                                        hintContent += $"\n<size=20>Press G (Or Switch to Flashbang) to Taunt (<color=#f54842>{BeautifyTime(CurrentTime, SCProphunt.Instance.PropHuntRound.TauntedPropPlayers[player.UserId] + (long)(SCProphunt.Instance.Config.ManualTauntCooldown * 1000))}!</color>)</size>\n";
+                                        hintContent += $"\n<size=20>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.prop_ui_taunt_hint)} (<color=#f54842>{BeautifyTime(CurrentTime, SCProphunt.Instance.PropHuntRound.TauntedPropPlayers[player.UserId] + (long)(SCProphunt.Instance.Config.ManualTauntCooldown * 1000))}!</color>)</size>\n";
                                     }
                                     else
                                     {
-                                        hintContent += "\n<size=20>Press G (Or Switch to Flashbang) to Taunt (<color=#63f542>Ready!</color>)</size>\n";
+                                        hintContent += $"\n<size=20>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.prop_ui_taunt_hint)} (<color=#63f542>{ProcessTranslation(SCProphunt.Instance.Config.PluginTranslations.prop_ui_taunt_ready)}</color>)</size>\n";
                                     }
                                 }
                             }

@@ -50,6 +50,7 @@
     <Compile Include="Types\Props\PropInfo.cs" />
     <Compile Include="Types\Props\PropItemComponent.cs" />
     <Compile Include="Types\Props\PropPlayerComponent.cs" />
+    <Compile Include="Types\Translations\MinigameTranslations.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony, Version=2.2.2.0, Culture=neutral, processorArchitecture=MSIL">

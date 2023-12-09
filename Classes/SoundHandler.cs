@@ -28,6 +28,8 @@ namespace SCProphunt
         public static List<ReferenceHub> AudioPlayers = new List<ReferenceHub>();
         public static void PlayAudio(string audioFile, byte volume, bool loop, string soundName, Vector3 position, float dur = 0)
         {
+            if (!SCProphunt.Instance.Config.EnableAudio) return;
+
             try
             {
                 //var newPlayer = UnityEngine.Object.Instantiate(NetworkManager.singleton.playerPrefab);
@@ -39,14 +41,6 @@ namespace SCProphunt
                 Npc audioNpc = SpawnFix(soundName, position != Vector3.zero ? RoleTypeId.Tutorial : RoleTypeId.Spectator, id, "");
                 var hubPlayer = audioNpc.ReferenceHub;
                 AudioPlayers.Add(hubPlayer);
-
-                try
-                {
-                    hubPlayer.authManager.InstanceMode = ClientInstanceMode.Unverified;
-                } catch (Exception)
-                {
-
-                }
 
                 try
                 {

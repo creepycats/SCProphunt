@@ -63,21 +63,18 @@ namespace SCProphunt.handlers
                     if (!SCProphunt.Instance.PropHuntRound.KilledPlayers.Contains(args.Player.UserId))
                     {
                         long CurrentTime = (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds;
-                        string playerColor = SCProphunt.Instance.PropHuntRound.PropHuntTeam[args.Player.UserId] == "hunter" ? "#f7c331" : "#31bcf7";
                         if (args.Attacker != null)
                         {
                             if (args.Attacker.Id == args.Player.Id)
                             {
-                                string attackerColor = SCProphunt.Instance.PropHuntRound.PropHuntTeam[args.Attacker.UserId] == "hunter" ? "#f7c331" : "#31bcf7";
-                                SCProphunt.Instance.PropHuntRound.KillFeed.Add($"[💀] <color={attackerColor}>{args.Attacker.Nickname}</color> Blew Themselves Up", CurrentTime);
+                                SCProphunt.Instance.PropHuntRound.KillFeed.Add(Game.ProcessTranslationKillfeed(SCProphunt.Instance.Config.PluginTranslations.killfeed_explosion_self, args.Player), CurrentTime);
                             }
                             else {
-                                string attackerColor = SCProphunt.Instance.PropHuntRound.PropHuntTeam[args.Attacker.UserId] == "hunter" ? "#f7c331" : "#31bcf7";
-                                SCProphunt.Instance.PropHuntRound.KillFeed.Add($"[💀] <color={attackerColor}>{args.Attacker.Nickname}</color> Found <color={playerColor}>{args.Player.Nickname}</color>", CurrentTime);
+                                SCProphunt.Instance.PropHuntRound.KillFeed.Add(Game.ProcessTranslationKillfeed(SCProphunt.Instance.Config.PluginTranslations.killfeed_found_player, args.Player, args.Attacker), CurrentTime);
                             }
                         } else
                         {
-                            SCProphunt.Instance.PropHuntRound.KillFeed.Add($"[💀] <color={playerColor}>{args.Player.Nickname}</color> Died", CurrentTime);
+                            SCProphunt.Instance.PropHuntRound.KillFeed.Add(Game.ProcessTranslationKillfeed(SCProphunt.Instance.Config.PluginTranslations.killfeed_death, args.Player), CurrentTime);
                         }
                         SCProphunt.Instance.PropHuntRound.KilledPlayers.Add(args.Player.UserId);
                     }
@@ -184,19 +181,16 @@ namespace SCProphunt.handlers
                     if (hitPlayer.Health < 1) {
                         SCProphunt.Instance.PropHuntRound.KilledPlayers.Add(hitPlayer.UserId);
                         args.Player.Health += SCProphunt.Instance.Config.PropKillHP;
-                        string playerColor = SCProphunt.Instance.PropHuntRound.PropHuntTeam[hitPlayer.UserId] == "hunter" ? "#f7c331" : "#31bcf7";
-                        string attackerColor = SCProphunt.Instance.PropHuntRound.PropHuntTeam[args.Player.UserId] == "hunter" ? "#f7c331" : "#31bcf7";
-                        SCProphunt.Instance.PropHuntRound.KillFeed.Add($"[💀] <color={attackerColor}>{args.Player.Nickname}</color> Found <color={playerColor}>{hitPlayer.Nickname}</color>", CurrentTime);
-                        hitPlayer.Kill($"{args.Player.Nickname} Found {hitPlayer.Nickname}");
+                        SCProphunt.Instance.PropHuntRound.KillFeed.Add(Game.ProcessTranslationKillfeed(SCProphunt.Instance.Config.PluginTranslations.killfeed_found_player, hitPlayer, args.Player), CurrentTime);
+                        hitPlayer.Kill(Game.ProcessTranslationKillfeed(SCProphunt.Instance.Config.PluginTranslations.killfeed_found_player, hitPlayer, args.Player));
                     }
                 } else
                 {
                     if (!args.Player.IsGodModeEnabled) args.Player.Health -= 5; // Base Damage for Missing
                     if (args.Player.Health < 1) {
                         SCProphunt.Instance.PropHuntRound.KilledPlayers.Add(args.Player.UserId);
-                        string attackerColor = SCProphunt.Instance.PropHuntRound.PropHuntTeam[args.Player.UserId] == "hunter" ? "#f7c331" : "#31bcf7";
-                        SCProphunt.Instance.PropHuntRound.KillFeed.Add($"[💀] <color={attackerColor}>{args.Player.Nickname}</color> Couldn't Guess Correctly", CurrentTime);
-                        args.Player.Kill($"{args.Player.Nickname} couldn't find the props successfully...");
+                        SCProphunt.Instance.PropHuntRound.KillFeed.Add(Game.ProcessTranslationKillfeed(SCProphunt.Instance.Config.PluginTranslations.killfeed_cant_find, args.Player), CurrentTime);
+                        args.Player.Kill(Game.ProcessTranslationKillfeed(SCProphunt.Instance.Config.PluginTranslations.killfeed_cant_find, args.Player));
                     }
                 }
             }
@@ -215,8 +209,7 @@ namespace SCProphunt.handlers
                 if (SCProphunt.Instance.PropHuntRound.PropHuntTeam.ContainsKey(args.Player.UserId))
                 {
                     long CurrentTime = (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds;
-                    string playerColor = SCProphunt.Instance.PropHuntRound.PropHuntTeam[args.Player.UserId] == "hunter" ? "#f7c331" : "#31bcf7";
-                    SCProphunt.Instance.PropHuntRound.KillFeed.Add($"[🚪] <color={playerColor}>{args.Player.Nickname}</color> Disconnected", CurrentTime);
+                    SCProphunt.Instance.PropHuntRound.KillFeed.Add(Game.ProcessTranslationKillfeed(SCProphunt.Instance.Config.PluginTranslations.killfeed_disconnect, args.Player), CurrentTime);
                     SCProphunt.Instance.PropHuntRound.PropHuntTeam.Remove(args.Player.UserId);
                 }
 
@@ -239,6 +232,7 @@ namespace SCProphunt.handlers
             if (SCProphunt.Instance.PropHuntRound == null) return;
             if (args.Player.UserId == null) return;
             if (args.Player.IsNPC) return;
+            if (args.Item == null) return;
 
             try
             {

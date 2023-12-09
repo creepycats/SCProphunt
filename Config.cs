@@ -21,6 +21,11 @@ namespace SCProphunt.Config
         [Description("Will the plugin print Debug Text?")]
         public bool Debug { get; set; } = false;
         /// <summary>
+        ///  Enable Custom Sounds?
+        /// </summary>
+        [Description("Enable the Custom Sounds?")]
+        public bool EnableAudio { get; set; } = true;
+        /// <summary>
         ///  How many extra props per room to spawn per player (Default is 0.5)
         /// </summary>
         [Description("How many extra props per room to spawn per player (Default is 0.5)")]
@@ -55,6 +60,11 @@ namespace SCProphunt.Config
         /// </summary>
         [Description("How many Taunt sound files are there? NOTE: MUST BE MONO .OGG, numbered 1 through # (Ex: 1.ogg, 2.ogg... 35.ogg)")]
         public int NumberOfTaunts { get; set; } = 35;
+
+        [Description("Change Plugin Translations Here (I don't like translations.yml)")]
+        public MinigameTranslations PluginTranslations { get; set; } = new MinigameTranslations() {
+            
+        };
         /// <summary>
         ///  Default Prop Information (Item is Irrelevant) - Set player scale, health, and item offsets
         /// </summary>

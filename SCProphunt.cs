@@ -16,7 +16,7 @@ namespace SCProphunt
     {
         public override string Name => "SCProphunt";
         public override string Author => "creepycats";
-        public override Version Version => new Version(1, 1, 0);
+        public override Version Version => new Version(1, 1, 1);
 
         public static SCProphunt Instance { get; set; }
 
