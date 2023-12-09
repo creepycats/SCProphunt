@@ -55,3 +55,23 @@ REMOTE ADMIN:
 - `propadmin start <time>` : Starts a Prophunt Round with the Given Time Limit
 - `propadmin end/stop` : Ends a Prophunt Round Early
 - `propadmin team <player> prop/admin` : Force a Player to Join a Specific Team
+
+## Translations
+Translations for now are located in the Plugin Config. You can use these placeholder variables to represent game data:
+
+TRANSLATION VARIABLES:
+- `{props}` - Number of Props left
+- `{hunters}` - Number of Hunters left
+- `{releaseTime}` - Time until Hunters are Released
+- `{timeLeft}` - Time left in the Round
+- `{votingTime}` - Time left to vote
+- `{nextTaunt}` - Time until the Next Global Forced Taunt
+- `{lightVotes}` - Number of votes for Light Containment
+- `{heavyVotes}` - Number of votes for Heavy Containment
+- `{entranceVotes}` - Number of votes for Entrance Zone
+- `{startingIn}` - Time until the round starts
+- `{chosenMap}` - The current Zone being played
+- `{voteZone}` - The Zone a player has voted for. ONLY works with Translation `voting_current_selection`
+- `{voteCount}` - Number of votes cast for a certain zone. ONLY works with Translation `voting_vote_count`
+- `{attacker}` - Name of the Attacker for Killfeeds. ONLY works with Translation `killfeed_found_player`
+- `{victim}` - Name of the Attacker for Killfeeds. ONLY works with Translations beginning with `killfeed_`, EXCLUDING `killfeed_hunters_released`
